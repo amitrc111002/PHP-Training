@@ -3,45 +3,39 @@ require 'productconnection.php';
 require 'functions.php';
 
 $errors = [];
-$success_msg = "";
+$success_msg = [];
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product']))
+if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product']))
 {
-    $name = $_POST['name'];
-    $price = $_POST['price'];
-    $cat_id = $_POST['category_id'];
+    $productObj = new Product($pdo, $_POST['name'], $_POST['price']);
+    $result = $productObj->addProduct($_POST['category_id']);
 
-    $errors = validateProduct($name, $price);
-
-    if (empty($errors))
+    if($result === true)
     {
-        $sql = "INSERT INTO products (name, price, category_id) VALUES (?, ?, ?)";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$name, $price, $cat_id]);
         $success_msg = "Product added successfully!";
     }
+    else
+    {
+        $errors = $result;
+    }
 }
-
-if (isset($_GET['delete']))
+if(isset($_GET['delete']))
 {
-    $id = $_GET['delete'];
-    $pdo->prepare("DELETE FROM products WHERE id = ?")->execute([$id]);
+    Product::deleteProduct($pdo, $_GET['delete']);
     header("Location: homepage.php?msg=deleted");
     exit;
 }
-
-if (isset($_GET['msg']) && $_GET['msg'] == 'deleted')
+if(isset($_GET['msg']) && $_GET['msg'] == 'deleted')
 {
     $success_msg = "Product removed.";
 }
-
 $products = $pdo->query("SELECT p.*, c.name as cat_name FROM products p JOIN categories c ON p.category_id = c.id")->fetchAll();
 $categories = $pdo->query("SELECT * FROM categories")->fetchAll();
 ?>
 
 <!DOCTYPE html>
 <html>
-<head><title>Product Manager</title></head>
+<head><title>Product Manager (OOP)</title></head>
 <body>
     <h1>Product Inventory</h1>
 
@@ -53,8 +47,8 @@ $categories = $pdo->query("SELECT * FROM categories")->fetchAll();
     <fieldset>
         <legend>Add New Product</legend>
         <form method="POST">
-            <input type="text" name="name" placeholder="Product Name" value="<?= isset($name) && !empty($errors) ? htmlspecialchars($name) : '' ?>">
-            <input type="number" step="0.01" name="price" placeholder="Price" value="<?= isset($price) && !empty($errors) ? htmlspecialchars($price) : '' ?>">
+            <input type="text" name="name" placeholder="Product Name">
+            <input type="number" step="0.01" name="price" placeholder="Price">
             <select name="category_id">
                 <?php foreach($categories as $c): ?>
                     <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>

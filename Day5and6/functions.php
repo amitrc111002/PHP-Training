@@ -6,8 +6,9 @@ class Product
     protected $price;
     protected $pdo;
 
-    public function __construct($id, $name, $price)
+    public function __construct($pdo, $name='', $price=0, $id=null)
     {
+        $this->pdo = $pdo;
         $this->id = $id;
         $this->name = $name;
         $this->price = $price;

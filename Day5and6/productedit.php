@@ -6,55 +6,51 @@ $errors = [];
 
 try
 {
-    if (!isset($_GET['id']))
+    if(!isset($_GET['id']))
     {
-        die("Missing ID parameter in URL.");
+        die("Missing ID.");
     }
-
     $id = $_GET['id'];
     $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
     $stmt->execute([$id]);
-    $product = $stmt->fetch();
+    $data = $stmt->fetch();
 
-    if (!$product)
+    if(!$data)
     {
-        die("Product with ID $id not found.");
+        die("Product not found.");
     }
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST')
+    $product = new Product($pdo, $data['name'], $data['price'], $id);
+    if($_SERVER['REQUEST_METHOD'] === 'POST')
     {
-        $name = $_POST['name'];
-        $price = $_POST['price'];
-        $errors = validateProduct($name, $price);
-
-        if (empty($errors))
+        $updated = new Product($pdo, $_POST['name'], $_POST['price'], $id);
+        $result = $updated->updateProduct();
+        if($result === true)
         {
-            $sql = "UPDATE products SET name = ?, price = ? WHERE id = ?";
-            $pdo->prepare($sql)->execute([$name, $price, $id]);
             header("Location: homepage.php");
             exit;
         }
+        else
+        {
+            $errors = $result;
+        }
     }
 }
-catch (Exception $e)
+catch(Exception $e)
 {
-    die("Logic Error: " . $e->getMessage());
+    die("Error: " . $e->getMessage());
 }
 ?>
 
 <!DOCTYPE html>
 <html>
-<head><title>Edit Product</title></head>
 <body>
-    <h2>Edit Product: <?= htmlspecialchars($product['name']) ?></h2>
-    
+    <h2>Edit Product</h2>
     <?php displayMessages($errors); ?>
-
     <form method="POST">
-        Name: <input type="text" name="name" value="<?= htmlspecialchars($product['name']) ?>"><br><br>
-        Price: <input type="number" step="0.01" name="price" value="<?= htmlspecialchars($product['price']) ?>"><br><br>
-        <button type="submit">Update Changes</button>
-        <a href="homepage.php">Cancel</a>
+        <input type="text" name="name" value="<?= htmlspecialchars($product->getName()) ?>">
+        <input type="number" step="0.01" name="price" value="<?= htmlspecialchars($product->getPrice()) ?>">
+        <button type="submit">Update</button>
     </form>
 </body>
 </html>
