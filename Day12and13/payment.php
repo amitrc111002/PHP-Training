@@ -27,7 +27,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['process_payment']))
 
         foreach($_SESSION['cart'] as $p_id => $qty)
         {
-            $stmt = $pdo->prepare("SELECCT name,price,stock FROM products WHERE id = ? FOR UPDATE");
+            $stmt = $pdo->prepare("SELECT name,price,stock FROM products WHERE id = ? FOR UPDATE");
             $stmt->execute([$p_id]);
             $product = $stmt->fetch();
             if(!$product || $product['stock'] < $qty)
@@ -39,7 +39,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['process_payment']))
             $total_price += ($product['price'] * $qty);
             $items_to_process[] = ['id' => $p_id, 'qty' => $qty, 'name' => $product['name']];
         }
-        $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_price, status) VALUES (?, ?, 'paid')");
+        $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_price, status) VALUES (?, ?, 'pending')");
         $stmt->execute([$_SESSION['user_id'], $total_price]);
         $order_id = $pdo->lastInsertId();
 

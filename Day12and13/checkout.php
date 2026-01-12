@@ -16,7 +16,6 @@ if (isset($_GET['remove']))
     }
     exit;
 }
-
 if (!isset($_SESSION['user_id']) || empty($_SESSION['cart']))
 {
     header("Location: homepage.php");
@@ -28,27 +27,26 @@ $success = isset($_GET['success']) ? true : false;
 $total_price = 0;
 $cart_summary = [];
 
+
 try
 {
-    foreach ($_SESSION['cart'] as $p_id => $qty)
+    $ids = implode(',', array_keys($_SESSION['cart']));
+    $stmt = $pdo->query("SELECT id, name, price, stock FROM products WHERE id IN ($ids)");
+    
+    while ($product = $stmt->fetch())
     {
-        $stmt = $pdo->prepare("SELECT name, price, stock FROM products WHERE id = ?");
-        $stmt->execute([$p_id]);
-        $product = $stmt->fetch();
-
-        if ($product)
-        {
-            $subtotal = $product['price'] * $qty;
-            $total_price += $subtotal;
-            $cart_summary[] = [
-                'name' => $product['name'],
-                'qty' => $qty,
-                'subtotal' => $subtotal
-            ];
-        }
+        $qty = $_SESSION['cart'][$product['id']];
+        $subtotal = $product['price'] * $qty;
+        $total_price += $subtotal;
+        
+        $cart_summary[] = [
+            'name' => $product['name'],
+            'qty' => $qty,
+            'subtotal' => $subtotal
+        ];
     }
 } 
-catch (Exception $e) 
+catch (Exception $e)
 {
     $errors[] = "Error loading cart: " . $e->getMessage();
 }
@@ -70,8 +68,8 @@ catch (Exception $e)
             <div class="mb-6 text-emerald-500">
                 <div class="text-6xl mb-4 text-emerald-400 font-bold">✓</div>
                 <h2 class="text-2xl font-bold">Order Placed!</h2>
-                <p class="text-slate-500 mt-2">Payment confirmed and stock updated.</p>
-                <p class="text-xs text-slate-400 mt-1 italic">An email confirmation has been sent.</p>
+                <p class="text-slate-500 mt-2">Your transaction was processed successfully.</p>
+                <p class="text-xs text-slate-400 mt-1 italic">A confirmation email has been logged.</p>
             </div>
             <a href="homepage.php" class="inline-block w-full bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition">Return Home</a>
 
@@ -97,7 +95,7 @@ catch (Exception $e)
             </div>
 
             <form action="payment.php" method="POST">
-                <input type="hidden" name="total_amount" value="<?= $total_price ?>">
+                <input type="hidden" name="total_hidden" value="<?= $total_price ?>">
                 <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition mb-3">
                     Proceed to Payment
                 </button>
