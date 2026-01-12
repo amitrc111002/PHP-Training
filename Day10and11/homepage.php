@@ -14,6 +14,12 @@ $isAdmin = ($_SESSION['role'] === 'admin');
 $errors = [];
 $success_msg = [];
 
+
+if (isset($_GET['err']) && $_GET['err'] == 'stock')
+{
+    $errors[] = "Requested quantity exceeds available stock.";
+}
+
 if ($isAdmin && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product']))
 {
     $productObj = new Product($pdo, $_POST['name'], $_POST['price']);
@@ -36,9 +42,10 @@ if ($isAdmin && isset($_GET['delete']))
     exit;
 }
 
-if (isset($_GET['msg']) && $_GET['msg'] == 'deleted')
+if (isset($_GET['msg']))
 {
-    $success_msg = "Product removed from inventory.";
+    if ($_GET['msg'] == 'deleted') $success_msg = "Product removed from inventory.";
+    if ($_GET['msg'] == 'updated') $success_msg = "Inventory updated successfully.";
 }
 
 $products = $pdo->query("SELECT p.*, c.name as cat_name FROM products p JOIN categories c ON p.category_id = c.id ORDER BY p.id DESC")->fetchAll();
@@ -87,7 +94,7 @@ $categories = $pdo->query("SELECT * FROM categories")->fetchAll();
 
         <?php 
             displayMessages($errors); 
-            if ($success_msg) displayMessages((array)$success_msg, 'success');
+            if (!empty($success_msg)) displayMessages((array)$success_msg, 'success');
         ?>
 
         <div class="grid grid-cols-1 <?= $isAdmin ? 'lg:grid-cols-3' : '' ?> gap-8">
@@ -167,15 +174,17 @@ $categories = $pdo->query("SELECT * FROM categories")->fetchAll();
                                 <td class="px-6 py-4 text-right">
                                     <?php if ($isAdmin): ?>
                                         <div class="flex justify-end gap-3">
-                                            <a href="productedit.php?id=<?= $p['id'] ?>" class="text-indigo-600 hover:text-indigo-800 text-sm font-bold">Edit</a>
+                                            <a href="productedit.php?id=<?= $p['id'] ?>" class="text-indigo-600 hover:text-indigo-800 text-sm font-bold">Edit/Restock</a>
                                             <a href="homepage.php?delete=<?= $p['id'] ?>" onclick="return confirm('Permanently delete this product?')" class="text-rose-400 hover:text-rose-600 text-sm font-bold">Delete</a>
                                         </div>
                                     <?php else: ?>
                                         <?php if ($p['stock'] > 0): ?>
-                                            <form action="cart.php" method="POST">
+                                            <form action="cart.php" method="POST" class="flex items-center justify-end gap-2">
+                                                <input type="number" name="qty" value="1" min="1" max="<?= $p['stock'] ?>" 
+                                                       class="w-16 px-2 py-1 border border-slate-200 rounded text-sm outline-none focus:ring-1 focus:ring-indigo-500">
                                                 <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
                                                 <button type="submit" name="add_to_cart" class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-indigo-700 transition">
-                                                    Add to Cart
+                                                    Add
                                                 </button>
                                             </form>
                                         <?php else: ?>
