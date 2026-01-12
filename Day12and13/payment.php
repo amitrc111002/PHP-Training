@@ -50,7 +50,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['process_payment']))
         }
         $pdo->commit();
 
-        sendOrderConfirmationEmail($_SESSION['username'], $total_price, $items_to_process);
+        sendOrderConfirmation($_SESSION['username'], $total_price, $items_to_process);
         unset($_SESSION['cart']);
         header("Location: checkout.php?success=1");
         exit;
