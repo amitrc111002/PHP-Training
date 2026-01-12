@@ -3,6 +3,20 @@ require 'productconnection.php';
 require 'functions.php';
 session_start();
 
+if (isset($_GET['remove']))
+{
+    unset($_SESSION['cart'][$_GET['remove']]);
+    if (empty($_SESSION['cart']))
+    {
+        header("Location: homepage.php");
+    }
+    else
+    {
+        header("Location: checkout.php");
+    }
+    exit;
+}
+
 if (!isset($_SESSION['user_id']) || empty($_SESSION['cart']))
 {
     header("Location: homepage.php");
