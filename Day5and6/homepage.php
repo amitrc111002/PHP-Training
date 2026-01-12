@@ -34,52 +34,87 @@ $categories = $pdo->query("SELECT * FROM categories")->fetchAll();
 ?>
 
 <!DOCTYPE html>
-<html>
-<head><title>Product Manager (OOP)</title></head>
-<body>
-    <h1>Product Inventory</h1>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Inventory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Product Inventory</h1>
+            <span class="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full text-sm font-semibold">
+                <?= count($products) ?> Total Items
+            </span>
+        </div>
 
-    <?php 
-        displayMessages($errors); 
-        if ($success_msg) displayMessages([$success_msg], 'success');
-    ?>
+        <?php 
+            displayMessages($errors); 
+            if ($success_msg) displayMessages([$success_msg], 'success');
+        ?>
 
-    <fieldset>
-        <legend>Add New Product</legend>
-        <form method="POST">
-            <input type="text" name="name" placeholder="Product Name">
-            <input type="number" step="0.01" name="price" placeholder="Price">
-            <select name="category_id">
-                <?php foreach($categories as $c): ?>
-                    <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>
-                <?php endforeach; ?>
-            </select>
-            <button type="submit" name="add_product">Save Product</button>
-        </form>
-    </fieldset>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-xl font-semibold mb-4 text-slate-700">Add New Item</h2>
+                    <form method="POST" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Product Name</label>
+                            <input type="text" name="name" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Enter name...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Price ($)</label>
+                            <input type="number" step="0.01" name="price" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Category</label>
+                            <select name="category_id" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none bg-white">
+                                <?php foreach($categories as $c): ?>
+                                    <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <button type="submit" name="add_product" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition">Save Product</button>
+                    </form>
+                </div>
+            </div>
 
-    <br>
-
-    <table border="1" cellpadding="10">
-        <thead>
-            <tr>
-                <th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($products as $p): ?>
-            <tr>
-                <td><?= $p['id'] ?></td>
-                <td><?= htmlspecialchars($p['name']) ?></td>
-                <td>$<?= number_format($p['price'], 2) ?></td>
-                <td><?= htmlspecialchars($p['cat_name']) ?></td>
-                <td>
-                    <a href="productedit.php?id=<?= $p['id'] ?>">Edit</a> | 
-                    <a href="homepage.php?delete=<?= $p['id'] ?>" onclick="return confirm('Delete this?')">Delete</a>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Product</th>
+                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Price</th>
+                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Category</th>
+                                <th class="px-6 py-4 text-sm font-semibold text-slate-600 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <?php foreach ($products as $p): ?>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-6 py-4 font-medium text-slate-800"><?= htmlspecialchars($p['name']) ?></td>
+                                <td class="px-6 py-4 text-slate-600">$<?= number_format($p['price'], 2) ?></td>
+                                <td class="px-6 py-4">
+                                    <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded"><?= htmlspecialchars($p['cat_name']) ?></span>
+                                </td>
+                                <td class="px-6 py-4 text-right space-x-3">
+                                    <a href="productedit.php?id=<?= $p['id'] ?>" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Edit</a>
+                                    <a href="homepage.php?delete=<?= $p['id'] ?>" onclick="return confirm('Delete this?')" class="text-rose-500 hover:text-rose-700 text-sm font-medium">Delete</a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

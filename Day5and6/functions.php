@@ -100,14 +100,17 @@ class DigitalProduct extends Product
     }
 }
 
-function displayMessages($messages, $type = 'error')
+function displayMessages($messages, $type = 'danger')
 {
     if (!empty($messages))
     {
-        echo "<div style='color: " . ($type == 'danger' ? 'red':'green') . "; font-weight: bold;'>";
+        $bgColor = ($type == 'danger' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700');
+        echo "<div class='mb-6 p-4 rounded-xl border $bgColor shadow-sm'>";
         foreach ($messages as $msg)
         {
-            echo "<div class='{$type}-message'>{$msg}</div>";
+            echo "<p class='flex items-center gap-2'>
+                    <span class='font-semibold'>•</span> " . htmlspecialchars($msg) . "
+                  </p>";
         }
         echo "</div>";
     }
