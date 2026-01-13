@@ -1,16 +1,17 @@
 <?php
 class Product
 {
-    protected $id, $name, $price, $pdo;
+    protected $id, $name, $price, $pdo, $description;
     protected $image;
 
-    public function __construct($pdo, $name='', $price=0, $id=null, $image='placeholder.png')
+    public function __construct($pdo, $name='', $price=0, $id=null, $image='placeholder.png', $description='')
     {
         $this->pdo = $pdo; 
         $this->id = $id; 
         $this->name = $name; 
         $this->price = $price;
         $this->image = $image;
+        $this->description = $description;
     }
 
     public function validate()
@@ -20,13 +21,14 @@ class Product
         if (!is_numeric($this->price) || $this->price <= 0) $errors[] = "Price must be greater than zero.";
         return $errors;
     }
+
     public function addProduct($categoryId, $stock = 10)
     {
         $errors = $this->validate();
         if(empty($errors))
         {
-            $stmt = $this->pdo->prepare("INSERT INTO products (name, price, category_id, stock, image) VALUES (?, ?, ?, ?, ?)");
-            return $stmt->execute([$this->name, $this->price, $categoryId, $stock, $this->image]);
+            $stmt = $this->pdo->prepare("INSERT INTO products (name, price, category_id, stock, image, description) VALUES (?, ?, ?, ?, ?, ?)");
+            return $stmt->execute([$this->name, $this->price, $categoryId, $stock, $this->image, $this->description]);
         }
         return $errors;
     }
@@ -36,8 +38,8 @@ class Product
         $errors = $this->validate();
         if(empty($errors))
         {
-            $stmt = $this->pdo->prepare("UPDATE products SET name = ?, price = ?, stock = ?, image = ? WHERE id = ?");
-            return $stmt->execute([$this->name, $this->price, $stock, $this->image, $this->id]);
+            $stmt = $this->pdo->prepare("UPDATE products SET name = ?, price = ?, stock = ?, image = ?, description = ? WHERE id = ?");
+            return $stmt->execute([$this->name, $this->price, $stock, $this->image, $this->description, $this->id]);
         }
         return $errors;
     }
@@ -47,12 +49,12 @@ class Product
         $stmt = $pdo->prepare("UPDATE products SET status = 'inactive' WHERE id = ?");
         return $stmt->execute([$id]);
     }
+
     public static function cancelOrder($pdo, $orderId)
     {
         try
         {
             $pdo->beginTransaction();
-
             $stmt = $pdo->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = ?");
             $stmt->execute([$orderId]);
             $items = $stmt->fetchAll();
@@ -64,7 +66,6 @@ class Product
             }
             $updateOrder = $pdo->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?");
             $updateOrder->execute([$orderId]);
-
             $pdo->commit();
             return true;
         } 
