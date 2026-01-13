@@ -14,7 +14,7 @@ $errors = [];
 
 try
 {
-    if (!isset($_GET['id']))
+    if (!isset($_GET['id'])) 
     {
         die("Missing Product ID.");
     }
@@ -29,7 +29,7 @@ try
         die("Product not found.");
     }
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST')
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') 
     {
         $newName = $_POST['name'];
         $newPrice = $_POST['price'];
@@ -38,25 +38,48 @@ try
         $currentStock = (int)$data['stock'];
         $totalStock = $currentStock + $addedStock;
         
-        if(isset($_POST['override_stock']) && $_POST['override_stock'] !== "") {
+        if(isset($_POST['override_stock']) && $_POST['override_stock'] !== "") 
+        {
             $totalStock = (int)$_POST['override_stock'];
         }
 
-        $updated = new Product($pdo, $newName, $newPrice, $id);
-        $result = $updated->updateProduct($totalStock);
-        
-        if ($result === true)
+        $imageName = $data['image'];
+
+        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) 
         {
-            header("Location: homepage.php?msg=updated");
-            exit;
+            $targetDir = "uploads/";
+            if (!is_dir($targetDir)) 
+            {
+                mkdir($targetDir, 0777, true);
+            }
+            
+            $imageName = time() . "_" . basename($_FILES['image']['name']);
+            $targetFilePath = $targetDir . $imageName;
+
+            if (!move_uploaded_file($_FILES['image']['tmp_name'], $targetFilePath)) 
+            {
+                $errors[] = "Failed to upload new image.";
+            }
         }
-        else
+
+        if (empty($errors)) 
         {
-            $errors = $result;
+            $updated = new Product($pdo, $newName, $newPrice, $id, $imageName);
+            $result = $updated->updateProduct($totalStock);
+            
+            if ($result === true) 
+            {
+                header("Location: homepage.php?msg=updated");
+                exit;
+            } 
+            else 
+            {
+                $errors = $result;
+            }
         }
     }
 } 
-catch (Exception $e)
+catch (Exception $e) 
 {
     die("Error: " . $e->getMessage());
 }
@@ -81,7 +104,16 @@ catch (Exception $e)
 
         <?php displayMessages($errors); ?>
 
-        <form method="POST" class="space-y-5">
+        <form method="POST" enctype="multipart/form-data" class="space-y-5">
+            
+            <div class="flex flex-col items-center mb-4">
+                <label class="block text-sm font-semibold text-slate-600 mb-2 w-full text-left">Current Product Image</label>
+                <div class="w-32 h-32 rounded-xl border border-slate-200 overflow-hidden bg-slate-100">
+                    <img src="uploads/<?= !empty($data['image']) ? $data['image'] : 'placeholder.png' ?>" 
+                         class="w-full h-full object-cover">
+                </div>
+            </div>
+
             <div>
                 <label class="block text-sm font-semibold text-slate-600 mb-1">Product Name</label>
                 <input type="text" name="name" value="<?= htmlspecialchars($data['name']) ?>" 
@@ -94,6 +126,12 @@ catch (Exception $e)
                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition">
             </div>
 
+            <div>
+                <label class="block text-sm font-semibold text-slate-600 mb-1">Change Product Photo</label>
+                <input type="file" name="image" accept="image/*" 
+                       class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+            </div>
+
             <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
                 <label class="block text-sm font-semibold text-indigo-900 mb-1">Add to Stock</label>
                 <div class="flex items-center gap-3">
@@ -101,7 +139,6 @@ catch (Exception $e)
                            class="w-full px-4 py-2.5 bg-white border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition">
                     <span class="text-xs text-indigo-500 font-medium whitespace-nowrap">Current: <?= $data['stock'] ?></span>
                 </div>
-                <p class="text-[10px] text-indigo-400 mt-2 italic">Enter the amount of new units received to increase total stock.</p>
             </div>
 
             <details class="group">

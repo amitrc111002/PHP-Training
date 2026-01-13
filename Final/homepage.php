@@ -40,16 +40,40 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_produc
 
     if (empty($errors))
     {
-        $productObj = new Product($pdo, $_POST['name'], $_POST['price'], null, $imageName);
-        $result = $productObj->addProduct($_POST['category_id'], $_POST['stock'] ?? 10);
+        try 
+        {
+            $catName = trim($_POST['category_name']);
+            
+            $catStmt = $pdo->prepare("SELECT id FROM categories WHERE name = ?");
+            $catStmt->execute([$catName]);
+            $category = $catStmt->fetch();
 
-        if ($result === true)
+            if ($category) 
+            {
+                $categoryId = $category['id'];
+            } 
+            else 
+            {
+                $insertCat = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
+                $insertCat->execute([$catName]);
+                $categoryId = $pdo->lastInsertId();
+            }
+
+            $productObj = new Product($pdo, $_POST['name'], $_POST['price'], null, $imageName);
+            $result = $productObj->addProduct($categoryId, $_POST['stock'] ?? 10);
+
+            if ($result === true) 
+            {
+                $success_msg[] = "Product added successfully!";
+            } 
+            else 
+            {
+                $errors = $result;
+            }
+        } 
+        catch (Exception $e) 
         {
-            $success_msg[] = "Product added successfully!";
-        }
-        else
-        {
-            $errors = $result;
+            $errors[] = "Error processing request: " . $e->getMessage();
         }
     }
 }
@@ -67,8 +91,11 @@ if (isset($_GET['msg']))
     if ($_GET['msg'] == 'updated') $success_msg[] = "Inventory updated successfully.";
 }
 
-$products = $pdo->query("SELECT p.*, c.name as cat_name FROM products p JOIN categories c ON p.category_id = c.id ORDER BY p.id DESC")->fetchAll();
-$categories = $pdo->query("SELECT * FROM categories")->fetchAll();
+$products = $pdo->query("SELECT p.*, c.name as cat_name 
+                         FROM products p 
+                         JOIN categories c ON p.category_id = c.id 
+                         WHERE p.status = 'active' 
+                         ORDER BY p.id DESC")->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -148,11 +175,8 @@ $categories = $pdo->query("SELECT * FROM categories")->fetchAll();
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-600 mb-1">Category</label>
-                            <select name="category_id" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition cursor-pointer">
-                                <?php foreach ($categories as $cat): ?>
-                                    <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <input type="text" name="category_name" placeholder="Enter category name" required 
+                                   class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-600 mb-1">Product Photo</label>

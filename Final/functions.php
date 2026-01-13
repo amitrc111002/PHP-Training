@@ -44,7 +44,8 @@ class Product
 
     public static function deleteProduct($pdo, $id)
     {
-        return $pdo->prepare("DELETE FROM products WHERE id = ?")->execute([$id]);
+        $stmt = $pdo->prepare("UPDATE products SET status = 'inactive' WHERE id = ?");
+        return $stmt->execute([$id]);
     }
     public static function cancelOrder($pdo, $orderId)
     {
