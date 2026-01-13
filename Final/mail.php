@@ -1,40 +1,52 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require 'vendor/autoload.php';
+
 function sendOrderConfirmation($toEmail, $username, $total, $items)
 {
-    $subject = "Order Confirmed - Inventory System";
-    
-    $itemList = "";
-    foreach ($items as $item)
+    $mail = new PHPMailer(true);
+
+    try 
     {
-        $itemList .= "- " . $item['name'] . " (Qty: " . $item['qty'] . ")\n";
-    }
+        
+        $mail->isSMTP();
+        $mail->Host       = 'smtp.gmail.com'; 
+        $mail->SMTPAuth   = true;
+        $mail->Username   = 'amit.roychowdhury@innofied.com';
+        $mail->Password   = 'kbga arby idzj efpz';   
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = 587;
 
-    $message = "
-    Hello $username,
+        $mail->setFrom('no-reply@stockpro.com', 'STOCKPRO System');
+        $mail->addAddress($toEmail, $username); 
 
-    Thank you for your purchase! Your payment of $" . number_format($total, 2) . " was successful.
-    
-    Order Summary:
-    $itemList
+        $mail->isHTML(true);
+        $mail->Subject = "Order Confirmed: #STK-" . date('His');
 
-    Your items will be prepared for shipment shortly.
-    
-    Regards,
-    The Inventory Team
-    ";
+        $itemListHtml = "<ul>";
+        foreach ($items as $item) 
+        {
+            $itemListHtml .= "<li>{$item['name']} (x{$item['qty']}) - $" . number_format($item['price'], 2) . "</li>";
+        }
+        $itemListHtml .= "</ul>";
 
-    $headers = "From: no-reply@inventorysystem.com" . "\r\n" .
-               "Reply-To: support@inventorysystem.com" . "\r\n" .
-               "X-Mailer: PHP/" . phpversion();
+        $mail->Body = "
+            <h2>Hi $username,</h2>
+            <p>Your order has been placed successfully!</p>
+            <h3>Summary:</h3>
+            $itemListHtml
+            <p><strong>Total Paid: $" . number_format($total, 2) . "</strong></p>
+            <p>Thank you for shopping with us!</p>
+        ";
 
-    $mailSent = @mail($toEmail, $subject, $message, $headers);
-
-    if (!$mailSent)
+        $mail->send();
+        return true;
+    } 
+    catch (Exception $e) 
     {
-        $logEntry = "[" . date('Y-m-d H:i:s') . "] EMAIL FAILED TO: $toEmail (User: $username) | TOTAL: $$total\n$message\n" . str_repeat("-", 30) . "\n";
-        file_put_contents('mail_log.txt', $logEntry, FILE_APPEND);
+        error_log("Mail Error: " . $mail->ErrorInfo);
+        return false;
     }
-    
-    return $mailSent;
 }
-?>
