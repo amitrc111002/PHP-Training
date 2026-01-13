@@ -52,8 +52,10 @@ if ($isAdmin && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_produc
             $productObj = new Product($pdo, $_POST['name'], $_POST['price'], null, $imageName, $_POST['description']);
             $result = $productObj->addProduct($categoryId, $_POST['stock'] ?? 10);
             
-            if ($result === true) $success_msg[] = "Product added successfully!";
-            else $errors = $result;
+            if ($result === true) 
+                $success_msg[] = "Product added successfully!";
+            else 
+                $errors = $result;
         } 
         catch (Exception $e) 
         { 
@@ -69,6 +71,7 @@ $products = $pdo->query("SELECT p.*, c.name as cat_name FROM products p JOIN cat
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STOCKPRO | Premium Inventory</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -97,6 +100,8 @@ $products = $pdo->query("SELECT p.*, c.name as cat_name FROM products p JOIN cat
                             <span class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white"><?= array_sum($_SESSION['cart']) ?></span>
                         <?php endif; ?>
                     </a>
+                <?php else: ?>
+                    <a href="report.php" class="text-sm font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl hover:bg-indigo-100 transition">Analytics Reports</a>
                 <?php endif; ?>
                 
                 <div class="text-right">
@@ -166,10 +171,10 @@ $products = $pdo->query("SELECT p.*, c.name as cat_name FROM products p JOIN cat
                                 </span>
                                 <?php if ($isAdmin): ?>
                                     <div class="flex gap-2">
-                                        <a href="productedit.php?id=<?= $p['id'] ?>" onclick="event.stopPropagation()" class="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100">
+                                        <a href="productedit.php?id=<?= $p['id'] ?>" onclick="event.stopPropagation()" class="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                         </a>
-                                        <a href="homepage.php?delete=<?= $p['id'] ?>" onclick="event.stopPropagation(); return confirm('Archive this item?')" class="p-2 bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-100">
+                                        <a href="homepage.php?delete=<?= $p['id'] ?>" onclick="event.stopPropagation(); return confirm('Archive this item?')" class="p-2 bg-rose-50 text-rose-500 rounded-lg hover:bg-rose-100 transition">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                         </a>
                                     </div>
@@ -212,7 +217,7 @@ $products = $pdo->query("SELECT p.*, c.name as cat_name FROM products p JOIN cat
                         <div class="flex-1">
                             <input type="number" name="qty" id="modalQtyInput" value="1" min="1" class="w-full px-6 py-4 bg-white border-none rounded-2xl text-lg font-black focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
-                        <button type="submit" name="add_to_cart" class="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition">Add to Cart</button>
+                        <button type="submit" name="add_to_cart" class="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition shadow-lg">Add to Cart</button>
                     </form>
                     <?php else: ?>
                         <div class="text-center p-4 border border-dashed border-slate-200 rounded-2xl text-xs font-bold text-slate-400 italic">Preview Mode (Admins cannot purchase)</div>
